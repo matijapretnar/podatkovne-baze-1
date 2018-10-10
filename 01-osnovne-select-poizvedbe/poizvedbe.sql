@@ -13,13 +13,13 @@ SELECT reziser,
 -- S podatki lahko tudi računamo
 SELECT naslov,
        dolzina / 60
-  FROM
+  FROM filmi;
 
 -- Če želimo natančen rezultat, moramo dolžino pretvoriti
 -- iz celega števila, saj sicer dobimo celoštevilsko deljenje
 SELECT naslov,
        CAST (dolzina AS FLOAT) / 60
-  FROM
+  FROM filmi;
 
 -- Če želimo, lahko podatke tudi poimenujemo
 SELECT naslov,
