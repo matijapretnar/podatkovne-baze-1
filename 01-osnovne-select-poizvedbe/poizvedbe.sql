@@ -241,7 +241,7 @@ SELECT DISTINCT reziser
  WHERE ocena <= 5.2;
 
 -- Če bi želeli videti vse njihove filme, bi lahko rezultate prekopirali v poizvedbo in napisali
-SELECT * FROM filmi WHERE reziser IN ('Richard Lester', 'John G. Avildsen', 'Brian Levant', 'Donald Petrie', 'Les Mayfield', 'Mark A.Z. Dippé', 'Stephen Hopkins', 'Jan de Bont', 'Raja Gosnell', 'Adam Shankman', 'Wayne Wang', 'Keenen Ivory Wayans', 'Mark Steven Johnson', 'Raja Gosnell', 'Frank Oz', 'Peter Hewitt', 'David Zucker', 'Jay Chandrasekhar', 'John Pasquin', 'Andrzej Bartkowiak', 'Roland Emmerich', 'Stefen Fangmeier', 'Ivan Reitman', 'Martin Weisz', 'Marcus Nispel', 'Rob Cohen', 'Michael J. Bassett', 'M. Night Shyamalan', 'Tim Hill', 'Scott Stewart', 'Harold Ramis', 'Stuart Beattie', 'Steve Carr', 'Karyn Kusama', 'David R. Ellis', 'Samuel Bayer', 'Rob Letterman', 'Bill Condon', 'David Slade', 'Bradley Parker', 'M. Night Shyamalan', 'Jake Kasdan', 'J Blakeson');
+SELECT * FROM filmi WHERE reziser IN ('Richard Lester', 'John G. Avildsen', 'Brian Levant', 'Ivan Reitman', 'Donald Petrie', 'Steven E. de Souza', 'Paul Verhoeven', 'Luis Llosa', 'Joel Schumacher', 'Les Mayfield', 'Raja Gosnell', 'Mark A.Z. Dippé', 'Jan de Bont', 'Stephen Hopkins', 'Barry Sonnenfeld', 'Danny Cannon', 'Roger Christian', 'Adam Shankman', 'Wayne Wang', 'Keenen Ivory Wayans', 'Mark Steven Johnson', 'McG', 'Frank Oz', 'Pitof', 'Lee Tamahori', 'Peter Hewitt', 'Rob Bowman', 'David Zucker', 'Kurt Wimmer', 'Nora Ephron', 'Jay Chandrasekhar', 'John Pasquin', 'Andrzej Bartkowiak', 'Craig Mazin', 'Roland Emmerich', 'Stefen Fangmeier', 'Neil LaBute', 'Aaron Seltzer', 'Brian Robbins', 'Colin Strause', 'Malcolm D. Lee', 'Jason Friedberg', 'Martin Weisz', 'Dennis Dugan', 'Marcus Nispel', 'Frank Miller', 'Rob Cohen', 'M. Night Shyamalan', 'Michael J. Bassett', 'Tim Hill', 'Scott Stewart', 'Harold Ramis', 'Mark Neveldine', 'James Wong', 'Catherine Hardwicke', 'Steve Carr', 'Karyn Kusama', 'David R. Ellis', 'Samuel Bayer', 'Chris Weitz', 'Michael Patrick King', 'Rob Letterman', 'Bill Condon', 'David Slade', 'Elizabeth Banks', 'Stuart Beattie', 'Tom Six', 'Josh Trank', 'John Singleton', 'Jake Kasdan', 'Bradley Parker', 'Henry Joost', 'J Blakeson', 'Sam Taylor-Johnson', 'Ali Abbas Zafar', 'Terry George');
 
 -- Ampak to ni pametno. Bolje je uporabiti gnezdeno poizvedbo.
 -- Namesto rezultatov SELECT poizvedbe napišemo kar poizvedbo samo.
@@ -425,6 +425,12 @@ SELECT MIN(dolzina)
 SELECT naslov, MIN(dolzina) 
   FROM filmi
  WHERE reziser = 'Steven Spielberg';
+
+-- Število vseh režiserjev (isto kot število vseh filmov)
+SELECT COUNT(reziser) FROM filmi;
+
+-- Število različnih režiserjev
+SELECT COUNT(DISTINCT reziser) FROM filmi;
 
 -- Lahko pogledamo, da je najkrajši Spielbergov film dolg 107 minut in nato
 -- napišemo ustrezno poizvedbo

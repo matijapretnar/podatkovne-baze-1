@@ -10,10 +10,11 @@ SELECT leto,
   FROM filmi
  GROUP BY leto;
 
--- Poleg tega si poglejmo še povprečno oceno vsakega leta
+-- Poleg tega si poglejmo še povprečno oceno in dolžino vsakega leta
 SELECT leto,
        count( * ),
-       avg(ocena) 
+       avg(ocena),
+       avg(dolzina)
   FROM filmi
  GROUP BY leto;
 
@@ -28,6 +29,19 @@ SELECT leto,
 -- Število filmov vsakega režiserja
 SELECT reziser,
        count( * ) 
+  FROM filmi
+ GROUP BY reziser;
+
+-- Zadnjič smo opozorili, da takale poizvedba včasih dela, včasih pa ne
+SELECT naslov,
+       max(ocena) 
+  FROM filmi;
+
+-- Podobno je pri združevanju. Vedno izbirajmo le stolpce, ki bodisi določajo
+-- skupino bodisi združujejo vrednosti
+SELECT reziser,
+       naslov,
+       max(ocena) 
   FROM filmi
  GROUP BY reziser;
 
@@ -85,28 +99,6 @@ SELECT reziser,
 HAVING stevilo_filmov >= 3
  ORDER BY povprecna_dolzina DESC;
 
--- Z WHERE izberemo le filme, daljše od 150 minut
--- S HAVING izberemo le tiste režiserje, ki so posneli vsaj tri take filme
-SELECT reziser,
-       count( * ) AS stevilo_filmov
-  FROM filmi
- WHERE dolzina >= 150
- GROUP BY reziser
-HAVING stevilo_filmov >= 3;
-
--- Zgoraj smo opozorili, da takale poizvedba včasih dela, včasih pa ne
-SELECT naslov,
-       max(ocena) 
-  FROM filmi;
-
--- Podobno je pri združevanju. Vedno izbirajmo le stolpce, ki bodisi določajo
--- skupino bodisi združujejo vrednosti
-SELECT reziser,
-       naslov,
-       max(ocena) 
-  FROM filmi
- GROUP BY reziser;
-
 -- Združujemo lahko tudi po izračunani vrednosti
 -- Število filmov in povprečna ocena v vsakem desetletju
 SELECT leto / 10 * 10 AS desetletje,
@@ -126,16 +118,6 @@ SELECT leto / 10 * 10 AS desetletje,
  GROUP BY desetletje;
 
 -- Združujemo lahko po več podatkih
--- Podatki o filmih z oceno vsaj 8 po režiserjih in po desetletjih
-SELECT leto / 10 * 10 AS desetletje,
-       reziser,
-       count( * ),
-       avg(ocena) 
-  FROM filmi
- WHERE ocena > 8
- GROUP BY desetletje,
-          reziser;
-
 -- Podatki o filmih po režiserjih in po desetletjih
 SELECT leto / 10 * 10 AS desetletje,
        reziser,
@@ -145,22 +127,15 @@ SELECT leto / 10 * 10 AS desetletje,
  GROUP BY desetletje,
           reziser;
 
-
--- Poglejmo, kateri režiserji so posneli vsaj 5 filmov v posameznem desetletju
+-- Podatki o filmih z oceno vsaj 8 po režiserjih in po desetletjih
 SELECT leto / 10 * 10 AS desetletje,
        reziser,
-       count( * ) AS stevilo_filmov,
+       count( * ),
        avg(ocena) 
   FROM filmi
+ WHERE ocena > 8
  GROUP BY desetletje,
-          reziser
-HAVING stevilo_filmov >= 5;
-
--- Število filmov v posameznem desetletju
-SELECT leto / 10 * 10 AS desetletje,
-       count( * ) 
-  FROM filmi
- GROUP BY desetletje;
+          reziser;
 
 -- Kako pa bi prešteli število režiserjev, ki so ustvarjali v posameznem desetletju?
 -- Spodnja poizvedba nam da iste vrednosti kot zgornja, saj se režiser, ki je
@@ -177,6 +152,59 @@ SELECT leto / 10 * 10 AS desetletje,
        count(DISTINCT reziser) 
   FROM filmi
  GROUP BY desetletje;
+
+-- Kateri režiserji v povprečju snemajo najboljše filme?
+SELECT reziser,
+       avg(ocena) as povprecna_ocena,
+       count( * ) AS stevilo_filmov
+  FROM filmi
+ GROUP BY reziser
+ ORDER BY povprecna_ocena DESC;
+
+-- Lahko, da je kdo imel samo srečo.
+-- S HAVING izberemo le tiste režiserje, ki so posneli vsaj tri take filme
+SELECT reziser,
+       avg(ocena) as povprecna_ocena,
+       count( * ) AS stevilo_filmov
+  FROM filmi
+ GROUP BY reziser
+HAVING stevilo_filmov >= 3
+ ORDER BY povprecna_ocena DESC;
+
+-- Poglejmo, kateri režiserji so posneli vsaj 5 filmov v posameznem desetletju
+SELECT leto / 10 * 10 AS desetletje,
+       reziser,
+       count( * ) AS stevilo_filmov,
+       avg(ocena) 
+  FROM filmi
+ GROUP BY desetletje,
+          reziser
+HAVING stevilo_filmov >= 5;
+
+-- Vsi režiserji, ki so posneli vsaj en dvourni film
+SELECT reziser,
+       count( * ) AS stevilo_filmov
+  FROM filmi
+ WHERE dolzina >= 120
+ GROUP BY reziser
+ ORDER BY stevilo_filmov DESC;
+
+-- Vsi režiserji, ki so posneli vsaj tri dvourne filme
+SELECT reziser,
+       count( * ) AS stevilo_filmov
+  FROM filmi
+ WHERE dolzina >= 120
+ GROUP BY reziser
+HAVING stevilo_filmov >= 3
+ ORDER BY stevilo_filmov DESC;
+
+-- Vsi režiserji, ki so posneli vsaj pet slabih filmov.
+SELECT reziser
+  FROM filmi
+ WHERE ocena <= 7
+ GROUP BY reziser
+HAVING count( * ) >= 5
+ ORDER BY reziser;
 
 -- Uredimo filme po letih, znotraj leta pa padajoče po oceni
 SELECT naslov,
@@ -256,3 +284,18 @@ SELECT reziser,
   FROM filmi
  ORDER BY reziser,
           ocena DESC;
+
+-- Filmi, ki so v danem desetletju glede ocene najbolj odstopali od povprečja.
+SELECT 10 * (leto / 10) AS desetletje,
+       leto,
+       naslov,
+       ocena,
+       (ABS(ocena - (
+                        SELECT AVG(ocena) 
+                          FROM filmi AS f
+                         WHERE 10 * (f.leto / 10) = 10 * (filmi.leto / 10)
+                    )
+       ) ) AS odstopanje
+  FROM filmi
+ ORDER BY desetletje,
+          odstopanje DESC;
