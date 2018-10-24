@@ -1,54 +1,162 @@
--- spomnimo se od zadnjič:
--- poglejmo povprečno oceno filmov tistih režiserjev, ki so posneli več kot 3 filme
-SELECT reziser,
-       AVG(ocena) AS povprecna_ocena,
-       COUNT( * ) AS stevilo_filmov
-  FROM filmi
- GROUP BY reziser
-HAVING stevilo_filmov > 3
+SELECT id,
+       naslov,
+       zanr
+  FROM filmi,
+       zanri
+ WHERE id = film;
+
+SELECT AVG(ocena) AS povprecna_ocena,
+       zanr
+  FROM filmi,
+       zanri
+ WHERE id = film
+ GROUP BY zanr
  ORDER BY povprecna_ocena DESC;
 
--- Toda v novi tabeli nimamo imen, le ID režiserjev. Imena so shranjena v tabeli
--- osebe. Če jih želimo, moramo tabeli stakniti po ujemajočem stolpcu.
-SELECT *
-  FROM filmi
-       JOIN
-       osebe ON filmi.reziser = osebe.id;
+SELECT film,
+       COUNT( * ) AS st_reziserjev
+  FROM vloge
+ WHERE vloga = 'reziser'
+ GROUP BY film
+HAVING st_reziserjev > 1
+ ORDER BY st_reziserjev DESC;
 
--- Zanima nas le naslov filma in ime režiserja
-SELECT filmi.naslov,
-       osebe.ime,
-       osebe.priimek
-  FROM filmi
-       JOIN
-       osebe ON filmi.reziser = osebe.id;
+SELECT id,
+       naslov,
+       zanr
+  FROM filmi,
+       zanri;
 
--- Podobno lahko vsakemu filmu pritaknemo žanre
-SELECT filmi.naslov,
+SELECT id,
+       naslov,
+       zanr
+  FROM filmi,
+       zanri
+ WHERE id = film;
+
+SELECT filmi.id,
+       filmi.naslov,
+       zanri.zanr
+  FROM filmi,
+       zanri
+ WHERE filmi.id = zanri.film;
+
+SELECT filmi.id,
+       filmi.naslov,
        zanri.zanr
   FROM filmi
        JOIN
        zanri ON filmi.id = zanri.film;
 
--- Paziti moramo, kako stikamo. Tu nam stakne filme in osebe, ki po naključju
--- delijo isti ID
-SELECT *
+SELECT filmi.id,
+       filmi.naslov,
+       zanri.zanr
+  FROM filmi,
+       zanri
+ WHERE filmi.id = zanri.film AND 
+       zanri.zanr != 'Comedy';
+
+SELECT filmi.id,
+       filmi.naslov,
+       zanri.zanr
   FROM filmi
        JOIN
-       osebe ON filmi.id = osebe.id;
+       zanri ON filmi.id = zanri.film
+ WHERE zanri.zanr != 'Comedy';
 
--- Lahko pritaknemo tudi osebe, katerih ID je enak letu filma. Tudi to ni preveč
--- smiselno.
-SELECT filmi.naslov,
-       filmi.ocena,
-       osebe.ime,
-       osebe.priimek
-  FROM filmi
+SELECT osebe.ime,
+       count( * ) AS st_filmov
+  FROM vloge
        JOIN
-       osebe ON filmi.leto = osebe.id
- ORDER BY ocena DESC;
+       osebe ON vloge.oseba = osebe.id
+ WHERE vloge.vloga = 'reziser'
+ GROUP BY osebe.id,
+          osebe.ime
+ ORDER BY st_filmov DESC;
 
--- Stikamo lahko tudi več tabel.
+;
+
+SELECT oseba,
+       COUNT( * ) AS st_filmov
+  FROM vloge
+ WHERE vloga = 'reziser'
+ GROUP BY oseba
+HAVING st_reziserjev > 1
+ ORDER BY st_reziserjev DESC;
+
+SELECT leto,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY leto;
+
+SELECT id,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY id;
+
+SELECT naslov,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY naslov;
+
+SELECT id,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY id;
+
+SELECT id,
+       naslov,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY id;
+
+SELECT leto,
+       count( * ) 
+  FROM filmi
+ GROUP BY leto;
+
+SELECT ocena,
+       count( * ) 
+  FROM filmi
+ GROUP BY ocena;
+
+SELECT leto,
+       ocena,
+       count( * ) 
+  FROM filmi
+ GROUP BY leto,
+          ocena;
+
+SELECT id,
+       naslov,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY id,
+          naslov;
+
+SELECT leto,
+       naslov,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY leto,
+          naslov;
+
+SELECT leto,
+       naslov,
+       avg(ocena),
+       count( * ) 
+  FROM filmi
+ GROUP BY leto,
+          naslov
+HAVING count( * ) > 1;
+
 SELECT *
   FROM (
            filmi
@@ -58,153 +166,78 @@ SELECT *
        JOIN
        osebe ON vloge.oseba = osebe.id;
 
--- Zanimajo nas naslovi filmov ter imena igralcev v njih.
--- Ker je stikanje asociativno, ga pišemo kar kot:
-SELECT filmi.naslov,
-       osebe.ime,
-       osebe.priimek
+SELECT *
+  FROM filmi
+       JOIN
+       (
+           vloge
+           JOIN
+           osebe ON vloge.oseba = osebe.id
+       )
+       ON filmi.id = vloge.film;
+
+SELECT *
   FROM filmi
        JOIN
        vloge ON filmi.id = vloge.film
        JOIN
        osebe ON vloge.oseba = osebe.id;
 
--- V katerih žanrih so igrali kateri igralci?
-SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr
-  FROM osebe
+SELECT filmi.naslov,
+       filmi.leto,
+       filmi.ocena,
+       osebe.ime,
+       vloge.vloga,
+       filmi.opis
+  FROM filmi
        JOIN
-       vloge ON osebe.id = vloge.oseba
+       vloge ON filmi.id = vloge.film
        JOIN
-       zanri ON vloge.film = zanri.film;
+       osebe ON vloge.oseba = osebe.id
+ WHERE osebe.ime = 'Nicolas Cage'
+ ORDER BY ocena DESC;
 
--- V koliko filmih posameznega žanra je igral kakšen igralec?
 SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) 
-  FROM osebe
+       count(vloge.film) AS st_komedij
+  FROM zanri
        JOIN
-       vloge ON osebe.id = vloge.oseba
+       vloge ON zanri.film = vloge.film
        JOIN
-       zanri ON vloge.film = zanri.film
- GROUP BY osebe.ime,
-          osebe.priimek,
-          zanri.zanr;
+       osebe ON vloge.oseba = osebe.id
+ WHERE zanri.zanr = 'Comedy' AND 
+       vloge.vloga = 'igralec'
+ GROUP BY osebe.id, osebe.ime
+ ORDER BY st_komedij DESC;
 
--- Če združimo le po žanrih, spet dobimo neko nepredvidljivo ime in priimek.
 SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) 
-  FROM osebe
+       count(vloge.film) AS st_komedij
+  FROM zanri
        JOIN
-       vloge ON osebe.id = vloge.oseba
+       vloge ON zanri.film = vloge.film
        JOIN
-       zanri ON vloge.film = zanri.film
- GROUP BY zanri.zanr;
-
--- Načeloma sta ime in priimek osebe določena z IDjem, tako da spodnja poizvedba
--- dela, a se je vseeno izogibajmo.
-SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) 
-  FROM osebe
-       JOIN
-       vloge ON osebe.id = vloge.oseba
-       JOIN
-       zanri ON vloge.film = zanri.film
+       osebe ON vloge.oseba = osebe.id
  GROUP BY osebe.id,
-          zanri.zanr
- ORDER BY osebe.priimek,
-          osebe.ime;
+          zanri.zanr,
+          vloge.vloga
+HAVING zanri.zanr = 'Comedy' AND 
+       vloge.vloga = 'igralec'
+ ORDER BY st_komedij DESC;
 
--- Zanima nas, kdo je posnel največ komedij. Najprej uredimo po številu filmov.
+;
+
 SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) AS stevilo_filmov
-  FROM osebe
+       st_komedij
+  FROM (
+           SELECT vloge.oseba,
+                  count(vloge.film) AS st_komedij
+             FROM zanri
+                  JOIN
+                  vloge ON zanri.film = vloge.film
+            WHERE zanri.zanr = 'Comedy' AND 
+                  vloge.vloga = 'igralec'
+            GROUP BY vloge.oseba
+       )
+       AS posteto
        JOIN
-       vloge ON osebe.id = vloge.oseba
-       JOIN
-       zanri ON vloge.film = zanri.film
- GROUP BY osebe.ime,
-          osebe.priimek,
-          zanri.zanr
- ORDER BY stevilo_filmov DESC;
-
--- Omejimo se samo na komedije. Ker so naši podatki malo čudni (za vsakim žanrom
--- je še nek prazen znak), ta poizvedba ne dela
-SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) AS stevilo_filmov
-  FROM osebe
-       JOIN
-       vloge ON osebe.id = vloge.oseba
-       JOIN
-       zanri ON vloge.film = zanri.film
- GROUP BY osebe.ime,
-          osebe.priimek,
-          zanri.zanr
-HAVING zanri.zanr = 'Comedy'
- ORDER BY stevilo_filmov DESC;
-
--- Namesto da bi popravili bazo, si pomagamo z LIKE
-SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) AS stevilo_filmov
-  FROM osebe
-       JOIN
-       vloge ON osebe.id = vloge.oseba
-       JOIN
-       zanri ON vloge.film = zanri.film
- GROUP BY osebe.ime,
-          osebe.priimek,
-          zanri.zanr
-HAVING zanri.zanr LIKE 'Com%'
- ORDER BY stevilo_filmov DESC;
-
--- Namesto HAVING lahko napišemo tudi WHERE, je bolj učinkovito,
--- ker naredi izbor preden gre izračunavati skupine. Če pogledamo čas trajanja,
--- vidimo, da je poizvedba več kot dvakrat hitrejša.
-SELECT osebe.ime,
-       osebe.priimek,
-       zanri.zanr,
-       count( * ) AS stevilo_filmov
-  FROM osebe
-       JOIN
-       vloge ON osebe.id = vloge.oseba
-       JOIN
-       zanri ON vloge.film = zanri.film
- WHERE zanri.zanr LIKE 'Com%'
- GROUP BY osebe.ime,
-          osebe.priimek,
-          zanri.zanr
- ORDER BY stevilo_filmov DESC;
-
--- Povprečna ocena filmov posameznega žanra
-SELECT zanri.zanr,
-       AVG(filmi.ocena) 
-  FROM zanri
-       JOIN
-       filmi ON zanri.film = filmi.id
- GROUP BY zanri.zanr;
-
--- Filmi noir so dobro ocenjeni. Kdaj je bil posnet zadnji?
-SELECT max(filmi.leto) 
-  FROM zanri
-       JOIN
-       filmi ON zanri.film = filmi.id
- WHERE zanri.zanr LIKE 'Film-Noir%';
-
--- Poglejmo, kateri režiserji so igrali v svojih filmih
-SELECT *
-  FROM vloge
-       JOIN
-       filmi ON vloge.film = filmi.id
- WHERE vloge.oseba = filmi.reziser;
+       osebe ON posteto.oseba = osebe.id
+ ORDER BY st_komedij DESC;
