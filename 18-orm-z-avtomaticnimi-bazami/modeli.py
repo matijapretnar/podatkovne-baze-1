@@ -6,8 +6,12 @@ baza.ustvari_bazo_ce_ne_obstaja(conn)
 conn.execute('PRAGMA foreign_keys = ON')
 
 class ObicajnoPolje:
-    def __init__(self, ime, **kwargs):
+    TEXT = 'TEXT'
+    INTEGER = 'INTEGER'
+    REAL = 'REAL'
+    def __init__(self, ime, tip, **kwargs):
         self.ime = ime
+        self.tip = tip
         if 'privzeta_vrednost' in kwargs:
             self.obvezno = False
             self.privzeta_vrednost = kwargs['privzeta_vrednost']
@@ -155,7 +159,7 @@ class Zanr(Zapis):
     ednina = 'žanr'
     mnozina = 'žanri'
     polja = [
-        ObicajnoPolje('naziv'),
+        ObicajnoPolje('naziv', ObicajnoPolje.TEXT),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='pripada', moj_stolpec='zanr', drugi_stolpec='film')
 
@@ -167,14 +171,14 @@ class Film(Zapis):
     ednina = 'film'
     mnozina = 'filmi'
     polja = [
-        ObicajnoPolje('naslov'),
-        ObicajnoPolje('dolzina'),
-        ObicajnoPolje('leto'),
-        ObicajnoPolje('ocena', privzeta_vrednost=None),
-        ObicajnoPolje('metascore', privzeta_vrednost=None),
-        ObicajnoPolje('glasovi', privzeta_vrednost=None),
-        ObicajnoPolje('zasluzek', privzeta_vrednost=None),
-        ObicajnoPolje('opis', privzeta_vrednost=''),
+        ObicajnoPolje('naslov', ObicajnoPolje.TEXT),
+        ObicajnoPolje('dolzina', ObicajnoPolje.INTEGER),
+        ObicajnoPolje('leto', ObicajnoPolje.INTEGER),
+        ObicajnoPolje('ocena', ObicajnoPolje.REAL, privzeta_vrednost=None),
+        ObicajnoPolje('metascore', ObicajnoPolje.INTEGER, privzeta_vrednost=None),
+        ObicajnoPolje('glasovi', ObicajnoPolje.INTEGER, privzeta_vrednost=None),
+        ObicajnoPolje('zasluzek', ObicajnoPolje.INTEGER, privzeta_vrednost=None),
+        ObicajnoPolje('opis', ObicajnoPolje.TEXT, privzeta_vrednost=''),
     ]
     zanri = Zapis.relacija(drugi_zapis='Zanr', povezovalna_tabela='pripada', moj_stolpec='film', drugi_stolpec='zanr')
     osebe = Zapis.relacija(drugi_zapis='Oseba', povezovalna_tabela='nastopa', moj_stolpec='film', drugi_stolpec='oseba')
@@ -186,7 +190,7 @@ class Oseba(Zapis):
     ednina = 'oseba'
     mnozina = 'osebe'
     polja = [
-        ObicajnoPolje('ime'),
+        ObicajnoPolje('ime', ObicajnoPolje.TEXT),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='nastopa', moj_stolpec='oseba', drugi_stolpec='film')
 
