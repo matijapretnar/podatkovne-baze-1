@@ -54,7 +54,7 @@ class Zapis:
     @classmethod
     def pobrisi_tabelo(cls):
         poizvedba = """
-            DROP TABLE {} IF EXISTS;
+            DROP TABLE IF EXISTS {};
         """.format(cls.ime_tabele())
         conn.execute(poizvedba)
 
