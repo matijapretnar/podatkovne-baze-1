@@ -9,27 +9,27 @@ class ObicajnoPolje:
     def __init__(self, ime, **kwargs):
         self.ime = ime
         if 'privzeta_vrednost' in kwargs:
-            self.obvezen = False
+            self.obvezno = False
             self.privzeta_vrednost = kwargs['privzeta_vrednost']
         else:
-            self.obvezen = True
+            self.obvezno = True
             self.privzeta_vrednost = None
 
 
 class Zapis:
-    stolpci = []
+    polja = []
 
     def __init__(self, **kwargs):
         self.id = None
-        for stolpec in self.stolpci:
-            if stolpec.ime in kwargs:
-                setattr(self, stolpec.ime, kwargs[stolpec.ime])
-            elif not stolpec.obvezen:
-                setattr(self, stolpec.ime, stolpec.privzeta_vrednost)
+        for polje in self.polja:
+            if polje.ime in kwargs:
+                setattr(self, polje.ime, kwargs[polje.ime])
+            elif not polje.obvezno:
+                setattr(self, polje.ime, polje.privzeta_vrednost)
             else:
                 raise ValueError(
                     'V konstruktorju {} je argument {} obvezen'.format(
-                        self.__class__.__name__, stolpec
+                        self.__class__.__name__, polje.ime
                     )
                 )
 
@@ -37,9 +37,9 @@ class Zapis:
         return "<{} '{}' (#{})>".format(self.__class__.__name__, self, self.id if self.id else '???')
     
     @classmethod
-    def imena_stolpcev(cls):
-        for stolpec in cls.stolpci:
-            yield stolpec.ime
+    def imena_polj(cls):
+        for polje in cls.polja:
+            yield polje.ime
 
     @staticmethod
     def relacija(drugi_zapis, povezovalna_tabela, moj_stolpec, drugi_stolpec):
@@ -62,30 +62,30 @@ class Zapis:
     @classmethod
     def _preberi_vrstico(cls, vrstica):
         id, *vrednosti = vrstica
-        kwargs = dict(zip(cls.imena_stolpcev(), vrednosti))
+        kwargs = dict(zip(cls.imena_polj(), vrednosti))
         zapis = cls(**kwargs)
         zapis.id = id
         return zapis
     
     def _shrani_kot_novo_vrstico(self):
         assert self.id is None
-        staknjeni_stolpci = ', '.join(self.imena_stolpcev())
-        vprasaji = ', '.join('?' for _ in self.stolpci)
+        staknjeni_stolpci = ', '.join(self.imena_polj())
+        vprasaji = ', '.join('?' for _ in self.polja)
         poizvedba = """
             INSERT INTO {} ({}) VALUES ({})
         """.format(self.ime_tabele, staknjeni_stolpci, vprasaji)
-        parametri = [getattr(self, stolpec) for stolpec in self.imena_stolpcev()]
+        parametri = [getattr(self, stolpec) for stolpec in self.imena_polj()]
         with conn:
             cur = conn.execute(poizvedba, parametri)
             self.id = cur.lastrowid
 
     def _posodobi_obstojeco_vrstico(self):
         assert self.id is not None
-        posodobitve = ', '.join('{} = ?'.format(stolpec) for stolpec in self.imena_stolpcev())
+        posodobitve = ', '.join('{} = ?'.format(stolpec) for stolpec in self.imena_polj())
         poizvedba = """
             UPDATE {} SET {} WHERE id = ?
         """.format(self.ime_tabele, posodobitve)
-        parametri = [getattr(self, stolpec) for stolpec in self.imena_stolpcev()]
+        parametri = [getattr(self, stolpec) for stolpec in self.imena_polj()]
         parametri.append(self.id)
         with conn:
             conn.execute(poizvedba, parametri)
@@ -151,7 +151,7 @@ class Zanr(Zapis):
     ime_tabele = 'zanr'
     ednina = 'žanr'
     mnozina = 'žanri'
-    stolpci = [
+    polja = [
         ObicajnoPolje('naziv'),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='pripada', moj_stolpec='zanr', drugi_stolpec='film')
@@ -164,7 +164,7 @@ class Film(Zapis):
     ime_tabele = 'film'
     ednina = 'film'
     mnozina = 'filmi'
-    stolpci = [
+    polja = [
         ObicajnoPolje('naslov'),
         ObicajnoPolje('dolzina'),
         ObicajnoPolje('leto'),
@@ -184,7 +184,7 @@ class Oseba(Zapis):
     ime_tabele = 'oseba'
     ednina = 'oseba'
     mnozina = 'osebe'
-    stolpci = [
+    polja = [
         ObicajnoPolje('ime'),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='nastopa', moj_stolpec='oseba', drugi_stolpec='film')
