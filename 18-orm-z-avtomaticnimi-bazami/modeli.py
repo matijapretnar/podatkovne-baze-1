@@ -5,25 +5,41 @@ conn = sqlite3.connect('filmi.db')
 baza.ustvari_bazo_ce_ne_obstaja(conn)
 conn.execute('PRAGMA foreign_keys = ON')
 
+class ObicajnoPolje:
+    def __init__(self, ime, **kwargs):
+        self.ime = ime
+        if 'privzeta_vrednost' in kwargs:
+            self.obvezen = False
+            self.privzeta_vrednost = kwargs['privzeta_vrednost']
+        else:
+            self.obvezen = True
+            self.privzeta_vrednost = None
+
+
 class Zapis:
-    privzete_vrednosti = {}
+    stolpci = []
 
     def __init__(self, **kwargs):
         self.id = None
         for stolpec in self.stolpci:
-            if stolpec in kwargs:
-                setattr(self, stolpec, kwargs[stolpec])
-            elif stolpec in self.privzete_vrednosti:
-                setattr(self, stolpec, self.privzete_vrednosti[stolpec])
+            if stolpec.ime in kwargs:
+                setattr(self, stolpec.ime, kwargs[stolpec.ime])
+            elif not stolpec.obvezen:
+                setattr(self, stolpec.ime, stolpec.privzeta_vrednost)
             else:
                 raise ValueError(
                     'V konstruktorju {} je argument {} obvezen'.format(
                         self.__class__.__name__, stolpec
                     )
-            )
+                )
 
     def __repr__(self):
         return "<{} '{}' (#{})>".format(self.__class__.__name__, self, self.id if self.id else '???')
+    
+    @classmethod
+    def imena_stolpcev(cls):
+        for stolpec in cls.stolpci:
+            yield stolpec.ime
 
     @staticmethod
     def relacija(drugi_zapis, povezovalna_tabela, moj_stolpec, drugi_stolpec):
@@ -46,30 +62,30 @@ class Zapis:
     @classmethod
     def _preberi_vrstico(cls, vrstica):
         id, *vrednosti = vrstica
-        kwargs = dict(zip(cls.stolpci, vrednosti))
+        kwargs = dict(zip(cls.imena_stolpcev(), vrednosti))
         zapis = cls(**kwargs)
         zapis.id = id
         return zapis
     
     def _shrani_kot_novo_vrstico(self):
         assert self.id is None
-        staknjeni_stolpci = ', '.join(self.stolpci)
+        staknjeni_stolpci = ', '.join(self.imena_stolpcev())
         vprasaji = ', '.join('?' for _ in self.stolpci)
         poizvedba = """
             INSERT INTO {} ({}) VALUES ({})
         """.format(self.ime_tabele, staknjeni_stolpci, vprasaji)
-        parametri = [getattr(self, stolpec) for stolpec in self.stolpci]
+        parametri = [getattr(self, stolpec) for stolpec in self.imena_stolpcev()]
         with conn:
             cur = conn.execute(poizvedba, parametri)
             self.id = cur.lastrowid
 
     def _posodobi_obstojeco_vrstico(self):
         assert self.id is not None
-        posodobitve = ', '.join('{} = ?'.format(stolpec) for stolpec in self.stolpci)
+        posodobitve = ', '.join('{} = ?'.format(stolpec) for stolpec in self.imena_stolpcev())
         poizvedba = """
             UPDATE {} SET {} WHERE id = ?
         """.format(self.ime_tabele, posodobitve)
-        parametri = [getattr(self, stolpec) for stolpec in self.stolpci]
+        parametri = [getattr(self, stolpec) for stolpec in self.imena_stolpcev()]
         parametri.append(self.id)
         with conn:
             conn.execute(poizvedba, parametri)
@@ -136,7 +152,7 @@ class Zanr(Zapis):
     ednina = 'žanr'
     mnozina = 'žanri'
     stolpci = [
-        'naziv',
+        ObicajnoPolje('naziv'),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='pripada', moj_stolpec='zanr', drugi_stolpec='film')
 
@@ -149,22 +165,15 @@ class Film(Zapis):
     ednina = 'film'
     mnozina = 'filmi'
     stolpci = [
-        'naslov',
-        'dolzina',
-        'leto',
-        'ocena',
-        'metascore',
-        'glasovi',
-        'zasluzek',
-        'opis',
+        ObicajnoPolje('naslov'),
+        ObicajnoPolje('dolzina'),
+        ObicajnoPolje('leto'),
+        ObicajnoPolje('ocena', privzeta_vrednost=None),
+        ObicajnoPolje('metascore', privzeta_vrednost=None),
+        ObicajnoPolje('glasovi', privzeta_vrednost=None),
+        ObicajnoPolje('zasluzek', privzeta_vrednost=None),
+        ObicajnoPolje('opis', privzeta_vrednost=''),
     ]
-    privzete_vrednosti = {
-        'ocena': None,
-        'metascore': None,
-        'glasovi': None,
-        'zasluzek': None,
-        'opis': '',
-    }
     zanri = Zapis.relacija(drugi_zapis='Zanr', povezovalna_tabela='pripada', moj_stolpec='film', drugi_stolpec='zanr')
     osebe = Zapis.relacija(drugi_zapis='Oseba', povezovalna_tabela='nastopa', moj_stolpec='film', drugi_stolpec='oseba')
 
@@ -176,7 +185,7 @@ class Oseba(Zapis):
     ednina = 'oseba'
     mnozina = 'osebe'
     stolpci = [
-        'ime',
+        ObicajnoPolje('ime'),
     ]
     filmi = Zapis.relacija(drugi_zapis='Film', povezovalna_tabela='nastopa', moj_stolpec='oseba', drugi_stolpec='film')
 
