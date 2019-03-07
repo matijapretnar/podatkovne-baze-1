@@ -58,6 +58,14 @@ class Zapis:
         conn.execute(poizvedba)
 
     @classmethod
+    def pobrisi_tabelo(cls):
+        poizvedba = """
+            DROP TABLE {} IF EXISTS;
+        """.format(cls.ime_tabele())
+        conn.execute(poizvedba)
+
+
+    @classmethod
     def ime_tabele(cls):
         return cls.__name__.lower()
 
