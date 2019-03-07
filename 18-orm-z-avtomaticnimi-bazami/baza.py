@@ -1,53 +1,28 @@
 import csv
+from modeli import Film, Oseba, Vloga, Zanr
 
 
 def pobrisi_tabele(conn):
     """
     Pobriše tabele iz baze.
     """
+
     conn.execute("DROP TABLE IF EXISTS pripada;")
     conn.execute("DROP TABLE IF EXISTS nastopa;")
-    conn.execute("DROP TABLE IF EXISTS zanr;")
-    conn.execute("DROP TABLE IF EXISTS vloga;")
-    conn.execute("DROP TABLE IF EXISTS oseba;")
-    conn.execute("DROP TABLE IF EXISTS film;")
+    Vloga.pobrisi_tabelo()
+    Zanr.pobrisi_tabelo()
+    Oseba.pobrisi_tabelo()
+    Film.pobrisi_tabelo()
 
 
 def ustvari_tabele(conn):
     """
     Ustvari tabele v bazi.
     """
-    conn.execute("""
-        CREATE TABLE film (
-            id        INTEGER PRIMARY KEY,
-            naslov    TEXT,
-            dolzina   INTEGER,
-            leto      INTEGER,
-            ocena     REAL,
-            metascore INTEGER,
-            glasovi   INTEGER,
-            zasluzek  INTEGER,
-            opis      TEXT
-        );
-    """)
-    conn.execute("""
-        CREATE TABLE oseba (
-            id  INTEGER PRIMARY KEY,
-            ime TEXT
-        );
-    """)
-    conn.execute("""
-        CREATE TABLE vloga (
-            id    INTEGER PRIMARY KEY AUTOINCREMENT,
-            naziv TEXT
-        );
-    """)
-    conn.execute("""
-        CREATE TABLE zanr (
-            id    INTEGER PRIMARY KEY AUTOINCREMENT,
-            naziv TEXT
-        );
-    """)
+    Film.ustvari_tabelo()
+    Oseba.ustvari_tabelo()
+    Vloga.ustvari_tabelo()
+    Zanr.ustvari_tabelo()
     conn.execute("""
         CREATE TABLE nastopa (
             film  INTEGER REFERENCES film(id),

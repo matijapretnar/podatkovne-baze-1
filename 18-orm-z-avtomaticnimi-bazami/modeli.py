@@ -185,6 +185,16 @@ class Zanr(Zapis):
     def __str__(self):
         return self.naziv
 
+class Vloga(Zapis):
+    ednina = 'vloga'
+    mnozina = 'vloge'
+    polja = [
+        ObicajnoPolje('naziv', ObicajnoPolje.TEXT),
+    ]
+
+    def __str__(self):
+        return self.naziv
+
 
 class Film(Zapis):
     ednina = 'film'
