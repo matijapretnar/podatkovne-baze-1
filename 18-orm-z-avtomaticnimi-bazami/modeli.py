@@ -37,6 +37,10 @@ class Zapis:
         return "<{} '{}' (#{})>".format(self.__class__.__name__, self, self.id if self.id else '???')
     
     @classmethod
+    def ime_tabele(cls):
+        return cls.__name__.lower()
+
+    @classmethod
     def imena_polj(cls):
         for polje in cls.polja:
             yield polje.ime
@@ -48,7 +52,7 @@ class Zapis:
             poizvedba = """
                 SELECT {0}.* FROM {0} JOIN {1} ON {0}.id = {1}.{2} WHERE {1}.{3} = ?
             """.format(
-                razred_drugega_zapisa.ime_tabele,
+                razred_drugega_zapisa.ime_tabele(),
                 povezovalna_tabela,
                 drugi_stolpec,
                 moj_stolpec
@@ -73,7 +77,7 @@ class Zapis:
         vprasaji = ', '.join('?' for _ in self.polja)
         poizvedba = """
             INSERT INTO {} ({}) VALUES ({})
-        """.format(self.ime_tabele, staknjeni_stolpci, vprasaji)
+        """.format(self.ime_tabele(), staknjeni_stolpci, vprasaji)
         parametri = [getattr(self, stolpec) for stolpec in self.imena_polj()]
         with conn:
             cur = conn.execute(poizvedba, parametri)
@@ -84,7 +88,7 @@ class Zapis:
         posodobitve = ', '.join('{} = ?'.format(stolpec) for stolpec in self.imena_polj())
         poizvedba = """
             UPDATE {} SET {} WHERE id = ?
-        """.format(self.ime_tabele, posodobitve)
+        """.format(self.ime_tabele(), posodobitve)
         parametri = [getattr(self, stolpec) for stolpec in self.imena_polj()]
         parametri.append(self.id)
         with conn:
@@ -106,7 +110,7 @@ class Zapis:
         else:
             poizvedba = """
                 DELETE FROM {} WHERE id = ?
-            """.format(self.ime_tabele)
+            """.format(self.ime_tabele())
             with conn:
                 conn.execute(poizvedba, [self.id])
 
@@ -120,7 +124,7 @@ class Zapis:
         where = ' AND '.join('{} = ?'.format(stolpec) for stolpec in stolpci)
         poizvedba = """
             SELECT * FROM {} WHERE {}
-        """.format(cls.ime_tabele, where)
+        """.format(cls.ime_tabele(), where)
         with conn:
             for vrstica in conn.execute(poizvedba, vrednosti):
                 yield cls._preberi_vrstico(vrstica)
@@ -133,7 +137,7 @@ class Zapis:
         if prvi is None:
             raise ValueError(
                 '{} z danimi podatki ne obstaja'.format(
-                    cls.ime_tabele
+                    cls.ime_tabele()
                 )
             )
         elif naslednji is None:
@@ -141,14 +145,13 @@ class Zapis:
         else:
             raise ValueError(
                 '{} z danimi podatki ni natanko določen'.format(
-                    cls.ime_tabele
+                    cls.ime_tabele()
                 )
             )
 
 
 
 class Zanr(Zapis):
-    ime_tabele = 'zanr'
     ednina = 'žanr'
     mnozina = 'žanri'
     polja = [
@@ -161,7 +164,6 @@ class Zanr(Zapis):
 
 
 class Film(Zapis):
-    ime_tabele = 'film'
     ednina = 'film'
     mnozina = 'filmi'
     polja = [
@@ -181,7 +183,6 @@ class Film(Zapis):
         return '{} ({})'.format(self.naslov, self.leto)
 
 class Oseba(Zapis):
-    ime_tabele = 'oseba'
     ednina = 'oseba'
     mnozina = 'osebe'
     polja = [
