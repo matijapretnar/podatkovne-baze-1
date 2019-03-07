@@ -58,6 +58,13 @@ class Zapis:
         """.format(cls.ime_tabele())
         conn.execute(poizvedba)
 
+    @classmethod
+    def izprazni_tabelo(cls):
+        poizvedba = """
+            DELETE FROM {};
+        """.format(cls.ime_tabele())
+        conn.execute(poizvedba)
+
 
     @classmethod
     def ime_tabele(cls):

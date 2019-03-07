@@ -6,7 +6,6 @@ def pobrisi_tabele(conn):
     """
     Pobriše tabele iz baze.
     """
-
     conn.execute("DROP TABLE IF EXISTS pripada;")
     conn.execute("DROP TABLE IF EXISTS nastopa;")
     Vloga.pobrisi_tabelo()
@@ -51,7 +50,7 @@ def uvozi_filme(conn):
     """
     Uvozi podatke o filmih.
     """
-    conn.execute("DELETE FROM film;")
+    Film.izprazni_tabelo()
     with open('podatki/film.csv', encoding="UTF-8") as datoteka:
         podatki = csv.reader(datoteka)
         stolpci = next(podatki)
@@ -66,7 +65,7 @@ def uvozi_osebe(conn):
     """
     Uvozi podatke o osebah.
     """
-    conn.execute("DELETE FROM oseba;")
+    Oseba.izprazni_tabelo()
     with open('podatki/oseba.csv', encoding="UTF-8") as datoteka:
         podatki = csv.reader(datoteka)
         stolpci = next(podatki)
@@ -82,7 +81,7 @@ def uvozi_vloge(conn):
     Uvozi podatke o vlogah.
     """
     conn.execute("DELETE FROM nastopa;")
-    conn.execute("DELETE FROM vloga;")
+    Vloga.izprazni_tabelo()
     vloge = {}
     with open('podatki/vloge.csv', encoding="UTF-8") as datoteka:
         podatki = csv.reader(datoteka)
@@ -106,7 +105,7 @@ def uvozi_zanre(conn):
     Uvozi podatke o žanrih.
     """
     conn.execute("DELETE FROM pripada;")
-    conn.execute("DELETE FROM zanr;")
+    Zanr.izprazni_tabelo()
     zanri = {}
     with open('podatki/zanri.csv', encoding="UTF-8") as datoteka:
         podatki = csv.reader(datoteka)
