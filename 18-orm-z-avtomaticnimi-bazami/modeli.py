@@ -1,5 +1,8 @@
 import baza
 import sqlite3
+import os
+
+os.chdir('/Users/matija/Documents/Matija/podatkovne-baze-1-2/18-orm-z-avtomaticnimi-bazami/')
 
 conn = sqlite3.connect('filmi.db')
 baza.ustvari_bazo_ce_ne_obstaja(conn)
@@ -40,6 +43,20 @@ class Zapis:
     def __repr__(self):
         return "<{} '{}' (#{})>".format(self.__class__.__name__, self, self.id if self.id else '???')
     
+    @classmethod
+    def ustvari_tabelo(cls):
+        stolpci = ", ".join([
+            '{} {}'.format(polje.ime, polje.tip)
+            for polje in cls.polja
+        ])
+        poizvedba = """
+            CREATE TABLE {} (
+                id        INTEGER PRIMARY KEY,
+                {}
+            );
+        """.format(cls.ime_tabele(), stolpci)
+        conn.execute(poizvedba)
+
     @classmethod
     def ime_tabele(cls):
         return cls.__name__.lower()
