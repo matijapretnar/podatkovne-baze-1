@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Uvod v SQL</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="../pomozno/prosojnice.css" />
+</head>
+<body>
+<textarea id="source">
+
+class: center, middle
+
+# Uvod v SQL
+
+## Podatkovne baze 1
+
+---
+
+class: center, middle
+
+## podatkovna baza
+
+## _database_
+
+### organizirana zbirka podatkov
+
+.left[
+- izdelki in naročila v trgovini
+- živali in stranke veterinarske ambulante
+- učilnica s predmeti, učitelji, učenci, nalogami, … 
+- …
+]
+
+---
+
+class: center, middle
+
+## sistem za upravljanje s podatkovnimi bazami
+
+## _database<br>management system_ (DBMS)
+
+### računalniško orodje,<br>s katerim upravljamo bazo
+
+PostgreSQL, MySQL, Access, **SQLite**, Excel, MongoDB, NoSQL, …
+
+---
+
+class: middle, center
+
+## Česa si želimo?
+
+### enostavnost
+### učinkovitost
+### varnost
+
+---
+
+class: center, middle
+
+## _relational database<br>management system_ (RDBMS)
+
+### DBMS, osnovan na<br>predstavitvi podatkov s tabelami
+
+.float-left.small.column[
+| id                     | naslov  | leto | ocena
+| ---------------------:|:-------------: | :------------: | :--------------:
+| 111161 | Kaznilnica odrešitve | 1994 | 9.3
+| 468569 | Vitez teme | 2008 | 9
+| 137523 | Klub golih pesti | 1999 | 8.8
+| 110912 | Šund | 1994 | 8.9
+| … | … | … | …
+||||
+|| **oseba ** | **film **
+|| 151 | 111161
+|| 168 | 110912
+|| … | …
+]
+.float-right.small.column[
+id | ime
+--:|:----
+142|Clint Eastwood
+95|Woody Allen
+134|Robert De Niro
+246|Bruce Willis
+115|Nicolas Cage
+168|Samuel L. Jackson
+329|Jackie Chan
+151|Morgan Freeman
+…|…]
+
+---
+
+class: center, middle
+
+## alternative RDBMS
+
+.small.left[```json
+[
+  {
+    "id": 111161,
+    "naslov": "Kaznilnica odrešitve",
+    "leto": 1994,
+    "ocena": 9.3,
+    "zanri": ["Drama"],
+    "reziserji": [ { "id": 1104, "ime": "Frank Darabont" } ],
+    "igralci": [
+      { "id": 209, "ime": "Tim Robbins" }, { "id": 151, "ime": "Morgan Freeman" },
+      { "id": 348409, "ime": "Bob Gunton" }, { "id": 6669, "ime": "William Sadler" }
+    ]
+  },
+  {
+    "id": 468569,
+    "naslov": "Vitez teme",
+    "leto": 2008,
+    "ocena": 9.0,
+    "zanri": [ "Action", "Crime", "Drama" ],
+    "reziserji": [ { "id": 634240, "ime": "Christopher Nolan" } ],
+    "igralci": [
+        { "id": 288, "ime": "Christian Bale" }, { "id": 5132, "ime": "Heath Ledger" },
+        { "id": 1173, "ime": "Aaron Eckhart" }, { "id": 323, "ime": "Michael Caine" }
+    ]
+  },
+  …
+]
+```]
+
+---
+
+class: center, middle
+
+## alternative RDBMS
+
+![](graf.png)
+
+---
+
+## ACID
+
+* **atomarnost** / _**A**tomicity_<br>izvede se celotna poizvedba ali pa nič
+* **konsistentnost** / _**C**onsistency_<br>zahtevam je vedno zadoščeno
+* **izoliranost** / _**I**solation_<br>vsaka poizvedba deluje tako, kot da bi bila edina
+* **trajnost** / _**D**urability_<br>potrjene spremembe so trajne
+
+---
+
+class: center, middle
+
+## _structured query language_ (SQL)
+
+### jezik, prek katerega dostopamo do večine RDBMSjev
+
+</textarea>
+<script src="../pomozno/prosojnice.js"></script>
+</body>
+</html>
