@@ -1,10 +1,11 @@
 -- Po novem imamo tabelo pripada, v kateri piše,
 -- kateri film pripada kateremu žanru.
 -- Poglejmo, v katerih žanrih je posnetih največ filmov.
-SELECT zanr, COUNT( * ) AS stevilo_filmov
+SELECT zanr,
+       COUNT( * ) AS st_filmov
   FROM pripada
  GROUP BY zanr
- ORDER BY stevilo_filmov DESC;
+ ORDER BY st_filmov DESC;
 
 -- Dobili smo le IDje, ne pa nazivov žanrov. Ti so v tabeli zanr,
 -- ki jo moramo pridružiti tabeli pripada. Najbolj surov način je,
@@ -42,12 +43,12 @@ SELECT *
 
 -- Sedaj lahko izračunamo želeno število:
 SELECT zanr.naziv,
-       COUNT(*) as stevilo_filmov
+       COUNT( * ) AS st_filmov
   FROM pripada
        JOIN
        zanr ON pripada.zanr = zanr.id
  GROUP BY zanr.naziv
- ORDER BY stevilo_filmov DESC;
+ ORDER BY st_filmov DESC;
 
 -- Izračunajmo še povprečno oceno filmov posameznega žanra.
 -- Podatki so shranjeni v treh tabelah: ocene v tabeli film,
@@ -80,13 +81,13 @@ SELECT zanr.naziv, film.naslov, film.leto, film.ocena
 SELECT zanr.naziv, film.naslov, film.leto, film.ocena
   FROM film
        JOIN
-       pripada
+       pripada ON film.id = pripada.film
        JOIN
        zanr ON pripada.zanr = zanr.id;
 
 -- Sedaj lahko izračunamo želeno povprečje:
 SELECT zanr.naziv,
-       AVG(film.ocena) as povprecna_ocena
+       avg(film.ocena) AS povprecna_ocena
   FROM film
        JOIN
        pripada ON film.id = pripada.film
@@ -95,18 +96,16 @@ SELECT zanr.naziv,
  GROUP BY zanr.naziv
  ORDER BY povprecna_ocena DESC;
 
--- Naredimo krajšo statistiko žanrov
+-- Še povprečna dolžina vsakega žanra:
 SELECT zanr.naziv,
-       count( * ) AS st_filmov,
-       avg(film.ocena) AS povprecna_ocena,
        avg(film.dolzina) AS povprecna_dolzina
-  FROM film
+  FROM zanr
        JOIN
-       pripada ON film.id = pripada.film
+       pripada ON zanr.id = pripada.zanr
        JOIN
-       zanr ON pripada.zanr = zanr.id
+       film ON pripada.film = film.id
  GROUP BY zanr.naziv
- ORDER BY zanr.naziv;
+ ORDER BY povprecna_dolzina DESC;
 
 -- Poglejmo, kateri filmi so imeli več kot enega režiserja.
 SELECT film.naslov, COUNT( * ) AS st_reziserjev
@@ -117,7 +116,6 @@ SELECT film.naslov, COUNT( * ) AS st_reziserjev
  GROUP BY film
 HAVING st_reziserjev > 1
  ORDER BY st_reziserjev DESC;
-
 
 -- Zgornja poizvedba je napačna, saj združuje filme z istim
 -- naslovom. Na primer, filma King Kong in Robin Hood sta
@@ -136,7 +134,6 @@ SELECT film.naslov, COUNT( * ) AS st_reziserjev
  GROUP BY film.id
  ORDER BY st_reziserjev DESC;
 
-
 -- Poglejmo si enostavnejši primer. Kako bi izračunali
 -- povprečno oceno in število filmov za vsako ID številko?
 -- To ni zelo zanimivo, ker je v vsaki skupini natanko
@@ -148,7 +145,6 @@ SELECT id,
   FROM film
  GROUP BY id
  ORDER BY st_filmov DESC;
-
 
 -- Če združujemo po naslovu, dobimo druge podatke,
 -- ker je več filmov z istim naslovom.
@@ -185,29 +181,40 @@ SELECT id,
  ORDER BY st_filmov DESC;
 
 -- Torej lahko svojo poizvedbo napišemo kot
-SELECT film.naslov, COUNT( * ) AS st_reziserjev
-  FROM vloga
+SELECT film.naslov,
+       count( * ) AS st_reziserjev
+  FROM film
        JOIN
-       film on vloga.film = film.id
+       vloga ON film.id = vloga.film
  WHERE vloga.tip = 'R'
  GROUP BY film.id, film.naslov
  ORDER BY st_reziserjev DESC;
 
--- Zanimajo nas naslovi filmov, v katerih je igral Nicolas Cage.
--- In tu so podatki o vseh filmih Nicolasa Cagea.
-SELECT film.naslov,
-       film.leto,
-       film.ocena,
+-- Zanimajo nas naslovi in leta filmov, v katerih je igral Harrison Ford.
+SELECT film.naslov, film.leto
+FROM
+  film
+  JOIN
+  vloga on film.id = vloga.film
+  JOIN
+  oseba on vloga.oseba = oseba.id
+where
+  vloga.tip = 'I' and oseba.ime = 'Harrison Ford';
+
+-- Koliko so skupno zaslužili filmi posameznega režiserja
+SELECT oseba.id,
        oseba.ime,
-       vloga.tip,
-       film.opis
+       sum(film.zasluzek) AS skupni_zasluzek
   FROM film
        JOIN
        vloga ON film.id = vloga.film
        JOIN
        oseba ON vloga.oseba = oseba.id
- WHERE oseba.ime = 'Nicolas Cage'
- ORDER BY ocena DESC;
+ WHERE vloga.tip = 'R' AND
+       film.zasluzek IS NOT NULL
+ GROUP BY oseba.id,
+          oseba.ime
+ ORDER BY skupni_zasluzek DESC;
 
 -- V katerih žanrih so igrali kateri igralci?
 SELECT oseba.ime,
@@ -245,35 +252,6 @@ SELECT oseba.ime,
  GROUP BY oseba.id, oseba.ime
  ORDER BY st_komedij DESC;
 
--- Namesto WHERE in GROUP BY lahko najprej naredimo tudi GROUP BY in potem HAVING.
-SELECT oseba.ime,
-       count(vloga.film) AS st_komedij
-  FROM pripada
-       JOIN
-       vloga ON pripada.film = vloga.film
-       JOIN
-       oseba ON vloga.oseba = oseba.id
-       JOIN
-       zanr ON pripada.zanr = zanr.id
- GROUP BY oseba.id,
-          oseba.ime,
-          pripada.zanr,
-          vloga.tip
-HAVING zanr.naziv = 'Comedy' AND 
-       vloga.tip = 'I'
- ORDER BY st_komedij DESC;
-
-
--- V katerih filmih je igral Harrison Ford?
-SELECT film.naslov, film.leto, film.opis
-  FROM film
-       JOIN
-       vloga ON film.id = vloga.film
-       JOIN
-       oseba ON vloga.oseba = oseba.id
- WHERE oseba.ime = 'Harrison Ford' AND 
-       vloga.tip = 'I';
-
 -- Katere osebe igrajo v filmih z najboljšo oceno?
 -- Zaradi relevantnosti se omejimo le na tiste, ki so
 -- igrali v vsaj petih filmih.
@@ -285,122 +263,123 @@ SELECT oseba.ime,
        vloga ON film.id = vloga.film
        JOIN
        oseba ON vloga.oseba = oseba.id
- WHERE vloga.tip = 'I'
- GROUP BY oseba.ime
+ WHERE film.glasovi > 75000 AND vloga.tip = 'I'
+ GROUP BY oseba.id,
+          oseba.ime
 HAVING st_filmov >= 5
  ORDER BY povprecna_ocena DESC;
 
 -- Kako bi pogledali, kdo vse je igral v filmu, ki ga je sam režiral?
--- Lahko bi rekli, da so to tisti pari imen oseb in naslovov filmov, kjer
--- imamo dve vlogi, ampak zadeva je videti sumljiva.
-SELECT oseba.ime,
-       film.naslov
+-- Lahko pogledamo vse tiste, ki so imeli v filmu dve vlogi.
+SELECT film.naslov,
+       oseba.ime
   FROM film
        JOIN
        vloga ON film.id = vloga.film
        JOIN
        oseba ON vloga.oseba = oseba.id
- GROUP BY oseba.ime,
-          film.naslov
-HAVING count(vloga.tip) = 2;
+ GROUP BY film.id,
+          film.naslov,
+          oseba.id,
+          oseba.ime
+HAVING count( * ) >= 2;
 
--- Lepše je, če naredimo stik tabele s samo sabo, da dobimo vse kombinacije
--- vlog z isto osebo in filmom.
-SELECT oseba.ime,
-       film.naslov
-  FROM film
-       JOIN
-       vloga AS prva_vloga ON film.id = prva_vloga.film
-       JOIN
-       vloga AS druga_vloga ON prva_vloga.film = druga_vloga.film AND 
-                               prva_vloga.oseba = druga_vloga.oseba
-       JOIN
-       oseba ON oseba.id = prva_vloga.oseba
- WHERE prva_vloga.tip = 'I' AND 
-       druga_vloga.tip = 'R';
-
--- Ker dobimo različno število rezultatov, uporabimo podpoizvedbo,
--- da odkrijemo, kje so razlike.
-WITH poizvedba_s_having AS (
-    SELECT oseba.ime,
-           film.naslov
-      FROM film
-           JOIN
-           vloga ON film.id = vloga.film
-           JOIN
-           oseba ON vloga.oseba = oseba.id
-     GROUP BY oseba.ime,
-              film.naslov
-    HAVING count(vloga.tip) = 2
+-- Lahko pa pogledamo, kje se v dveh različnih vlogah
+-- ujemata tako oseba kot film.
+WITH reziser AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'R'
 ),
-poizvedba_z_join AS (
-    SELECT oseba.ime,
-           film.naslov
-      FROM film
-           JOIN
-           vloga AS prva_vloga ON film.id = prva_vloga.film
-           JOIN
-           vloga AS druga_vloga ON prva_vloga.film = druga_vloga.film AND 
-                                   prva_vloga.oseba = druga_vloga.oseba
-           JOIN
-           oseba ON oseba.id = prva_vloga.oseba
-     WHERE prva_vloga.tip = 'I' AND 
-           druga_vloga.tip = 'R'
+igralec AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'I'
 )
-SELECT *
-  FROM poizvedba_s_having
- WHERE (poizvedba_s_having.ime, poizvedba_s_having.naslov) NOT IN poizvedba_z_join;
-;
+SELECT film.naslov, oseba.ime
+  FROM reziser
+       JOIN
+       igralec ON reziser.oseba = igralec.oseba AND 
+                  reziser.film = igralec.film
+       JOIN
+       film ON film.id = reziser.film
+       JOIN
+       oseba ON oseba.id = reziser.oseba;
 
--- Vidimo, da je Jonah Hill igral v dveh filmih z naslovom Superzur,
--- zato se je pojavil v prvi poizvedbi, čeprav se ne bi smel.
-SELECT *
-  FROM film
+-- Kdo je igral v največ filmih, ki jih je sam režiral?
+WITH reziser AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'R'
+),
+igralec AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'I'
+)
+SELECT oseba.ime,
+       count( * ) AS st_filmov
+  FROM reziser
        JOIN
-       vloga ON film.id = vloga.film
+       igralec ON reziser.oseba = igralec.oseba AND 
+                  reziser.film = igralec.film
        JOIN
-       oseba ON vloga.oseba = oseba.id
- WHERE film.naslov = 'Superzur' AND 
-       oseba.ime = 'Jonah Hill';
+       oseba ON oseba.id = reziser.oseba
+ GROUP BY oseba.id,
+          oseba.ime
+ ORDER BY st_filmov DESC;
 
 -- Zanima nas, kateri režiserji in igralci dostikrat ustvarjajo skupaj.
-SELECT podatki_reziserjev.ime AS reziser,
-       podatki_igralcev.ime AS igralec,
+WITH reziser AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'R'
+),
+igralec AS (
+    SELECT *
+      FROM vloga
+     WHERE tip = 'I'
+)
+SELECT oseba_reziser.ime,
+       oseba_igralec.ime,
        count( * ) AS st_filmov
-  FROM vloga AS reziserji
+  FROM reziser
        JOIN
-       vloga AS igralci ON reziserji.film = igralci.film
+       igralec ON reziser.film = igralec.film
        JOIN
-       oseba AS podatki_reziserjev ON podatki_reziserjev.id = reziserji.oseba
+       oseba AS oseba_reziser ON oseba_reziser.id = reziser.oseba
        JOIN
-       oseba AS podatki_igralcev ON podatki_igralcev.id = igralci.oseba
- WHERE reziserji.tip = 'R' AND 
-       igralci.tip = 'I' AND 
-       reziserji.oseba != igralci.oseba
- GROUP BY podatki_reziserjev.ime,
-          reziserji.oseba,
-          podatki_igralcev.ime,
-          igralci.oseba
-HAVING st_filmov > 5
+       oseba AS oseba_igralec ON oseba_igralec.id = igralec.oseba
+ GROUP BY oseba_reziser.id,
+          oseba_reziser.ime,
+          oseba_igralec.id,
+          oseba_igralec.ime
  ORDER BY st_filmov DESC;
 
 -- Zanima nas, kateri pari igralcev dostikrat ustvarjajo skupaj.
-SELECT prva_oseba.ime AS prvi,
-       druga_oseba.ime AS drugi,
+SELECT oseba_prvi.ime,
+       oseba_drugi.ime,
        count( * ) AS st_filmov
-  FROM vloga AS prva_vloga
+  FROM vloga AS prvi
        JOIN
-       vloga AS druga_vloga ON prva_vloga.film = druga_vloga.film
+       vloga AS drugi ON prvi.film = drugi.film
        JOIN
-       oseba AS prva_oseba ON prva_oseba.id = prva_vloga.oseba
+       oseba AS oseba_prvi ON oseba_prvi.id = prvi.oseba
        JOIN
-       oseba AS druga_oseba ON druga_oseba.id = druga_vloga.oseba
- WHERE prva_vloga.tip = 'I' AND 
-       druga_vloga.tip = 'I' AND 
-       prva_oseba.ime < druga_oseba.ime
- GROUP BY prva_oseba.ime,
-          prva_oseba.id,
-          druga_oseba.ime,
-          druga_oseba.id
-HAVING st_filmov > 5
+       oseba AS oseba_drugi ON oseba_drugi.id = drugi.oseba
+  WHERE oseba_prvi.ime < oseba_drugi.ime
+ GROUP BY oseba_prvi.id,
+          oseba_prvi.ime,
+          oseba_drugi.id,
+          oseba_drugi.ime
  ORDER BY st_filmov DESC;
+
+-- Kateri filmi so romantične komedije?
+SELECT film.* FROM
+    pripada AS prvi
+    JOIN
+    pripada AS drugi on prvi.film = drugi.film
+    JOIN
+    film ON film.id = prvi.film
+where prvi.zanr = 4 AND drugi.zanr = 8 AND oznaka != 'R'
+ORDER by film.glasovi DESC
