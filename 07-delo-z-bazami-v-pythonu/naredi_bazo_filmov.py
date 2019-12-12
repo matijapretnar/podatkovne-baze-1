@@ -133,25 +133,26 @@ def napolni_tabele(conn, filmi):
 
 
 def naredi_bazo_filmov(pobrisi_ce_obstaja=False):
-    IME_SQLITE_DATOTEKE = '../filmi.sqlite'
-    IME_DDL_DATOTEKE = 'filmi_ddl.sql'
+    IME_DATOTEKE_Z_BAZO = '../filmi.sqlite'
+    IME_DATOTEKE_Z_SQL_UKAZI = 'filmi.sql'
     IME_DATOTEKE_S_PODATKI = 'filmi.json'
     # Naredimo prazno bazo
-    if os.path.exists(IME_SQLITE_DATOTEKE):
+    if os.path.exists(IME_DATOTEKE_Z_BAZO):
         if pobrisi_ce_obstaja:
-            os.remove(IME_SQLITE_DATOTEKE)
+            os.remove(IME_DATOTEKE_Z_BAZO)
         else:
             print('Baza že obstaja in je ne bom spreminjal.')
             return
-    conn = sqlite3.connect(IME_SQLITE_DATOTEKE)
+    conn = sqlite3.connect(IME_DATOTEKE_Z_BAZO)
     # Ustvarimo tabele iz DDL datoteke
-    with open(IME_DDL_DATOTEKE) as ddl_datoteka:
-        ddl = ddl_datoteka.read()
+    with open(IME_DATOTEKE_Z_SQL_UKAZI) as datoteka_z_sql_ukazi:
+        ddl = datoteka_z_sql_ukazi.read()
         conn.executescript(ddl)
     # Naložimo podatke o filmih
     with open(IME_DATOTEKE_S_PODATKI) as datoteka_s_podatki:
         filmi = json.load(datoteka_s_podatki)
     napolni_tabele(conn, filmi)
+    conn.execute('VACUUM')
 
 
-naredi_bazo_filmov()
+naredi_bazo_filmov(pobrisi_ce_obstaja=True)
